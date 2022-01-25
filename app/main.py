@@ -1,17 +1,26 @@
-from fastapi import FastAPI, Response, status, HTTPException
+from fastapi import FastAPI, Depends, Response, status, HTTPException
 from fastapi.params import Body
 from datetime import datetime
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 from typing import Optional
 from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
 from .config import settings
+from . import models
+from .database import engine, get_db
+
+
 
 print(f"This api is running on {settings.dcgdb_host}")
 
+models.Base.metadata.create_all(bind=engine)
+
 app = FastAPI()
+
+
 
 
 retries = 0
@@ -44,12 +53,19 @@ class Person(BaseModel):
 
 # get all persons
 @app.get("/persons")
-def get_persons():
+def get_persons(db: Session = Depends(get_db)):
     cursor.execute(""" SELECT * FROM public.person """)
     persons = cursor.fetchall()
     print(persons)
     return {"data": persons}
 
+# test sqlalchemy, na
+@app.get("/sqlalchemy")
+def test_persons(db: Session = Depends(get_db)):
+    return{"status": "success"}
+
+
+    
 # Get admin persons
 @app.get("/persons/admins", status_code=status.HTTP_200_OK)
 def get_admin_person():
