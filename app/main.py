@@ -1,7 +1,10 @@
+from xmlrpc.client import boolean
 from fastapi import FastAPI, Depends, Response, status, HTTPException
 from fastapi.params import Body
-from datetime import datetime
+
 from pydantic import BaseModel
+import pydantic
+from sqlalchemy import Boolean, true
 from sqlalchemy.orm import Session
 from typing import Optional
 from random import randrange
@@ -9,7 +12,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
 from .config import settings
-from . import models
+from . import models, schemas
 from .database import engine, get_db
 
 
@@ -42,100 +45,86 @@ while retries <= 2:
         retries = retries + 1
         time.sleep(8 * retries)
 
-class Person(BaseModel):
-    personid: int
-    firstname: Optional[str]
-    lastname: Optional[str]
-    tgusername: Optional[str]
-    isadmin: Optional[bool]
-    createdatetime:  Optional[datetime]
+
 
 
 # get all persons
 @app.get("/persons")
 def get_persons(db: Session = Depends(get_db)):
-    cursor.execute(""" SELECT * FROM public.person """)
-    persons = cursor.fetchall()
-    print(persons)
-    return {"data": persons}
+    persons = db.query(models.Person).all()
+    return {"data": persons}    
 
-# test sqlalchemy, na
-@app.get("/sqlalchemy")
-def test_persons(db: Session = Depends(get_db)):
-    return{"status": "success"}
-
-
-    
-# Get admin persons
-@app.get("/persons/admins", status_code=status.HTTP_200_OK)
-def get_admin_person():
-    cursor.execute("""SELECT * FROM public.person WHERE isadmin = TRUE """)
-    persons = cursor.fetchall()
-    print(persons)
-
-    if not persons:
-         # response.status_code = status.HTTP_404_NOT_FOUND
-        # return {"message" : f"post with id {id} was not found"}
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"no admin found. Contact your guild contact!")
-
-    return {"data": persons}
 
 # Get a specific person
-@app.get("/persons/{personid}", status_code=status.HTTP_200_OK)
-def get_personsbytgchatid(personid: int, response: Response):
-    cursor.execute("""SELECT * FROM public.person WHERE personid = {0} """.format(personid))
-    person = cursor.fetchone()
-    print(person)
+@app.get("/persons/{personid}")
+def get_personsbytgchatid(personid: int, db: Session = Depends(get_db)):
+
+    person = db.query(models.Person).filter(models.Person.personid == personid).first()
 
     if not person:
-         # response.status_code = status.HTTP_404_NOT_FOUND
-        # return {"message" : f"post with id {id} was not found"}
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"person with telegramchatid <{personid}> was not found!")
 
     return {"data": person}
 
 
+# Get admin persons
+# TODO store isadmin in a separate table (to not be covered by the api)
+# @app.get("/admins", status_code=status.HTTP_200_OK)
+# def get_admin_person(db: Session = Depends(get_db)):
+#     admins = db.query(models.Person).filter(models.Person.isadmin == True ).all()  
+    
 
+#     if not admins:
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+#                             detail=f"no admin found. Something weird happened.... has the guild rugged you?!")
+
+#     return {"data": admins}
 
 
 # Create a person
 @app.post("/persons", status_code=status.HTTP_201_CREATED)
-def post_person(person: Person):
-    cursor.execute("""INSERT INTO public.person (personid, firstname, lastname, tgusername) VALUES(%s, %s, %s,NULLIF(%s,'')) RETURNING * """,
-                        (person.personid, person.firstname, person.lastname, person.tgusername))
-    new_person = cursor.fetchone()
-    conn.commit()
+def post_person(person: schemas.Person, db: Session = Depends(get_db)):
+
+    new_person = models.Person(**person.dict())
+    db.add(new_person)
+    db.commit()
+    db.refresh(new_person)
+
     return {"data": new_person}
 
 
 # Delete a person
 @app.delete("/persons/{personid}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_person(personid: int, response: Response):
-    cursor.execute("""DELETE FROM public.person WHERE personid = {0} RETURNING * """.format(personid))
-    deleted_person = cursor.fetchone()
-    conn.commit()    
+def delete_person(personid: int, db: Session = Depends(get_db)):
 
-    if deleted_person == None:
+    person = db.query(models.Person).filter(models.Person.personid == personid)
+    
+    if person.first() == None:
+
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
                             detail="person with id: {0} does not exist".format(personid))
 
+    person.delete(synchronize_session=False)
+    db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # Update a person (isadmin cannot be updated via API)
 @app.put("/persons/{personid}", status_code=status.HTTP_202_ACCEPTED)
-def update_person(personid: int, person: Person):
-    cursor.execute("""UPDATE public.person SET firstname = %s, lastname = %s, tgusername = %s WHERE personid = %s  RETURNING * """,
-                        (person.firstname, person.lastname, person.tgusername, personid))
-    updated_person = cursor.fetchone()
-    conn.commit()
+def update_person(personid: int, updated_person: schemas.Person, db: Session = Depends(get_db)):
+    
+    person_query = db.query(models.Person).filter(models.Person.personid == personid)
 
-    if updated_person == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"person <{personid}> was not found!")
+    persontoupdate = person_query.first()
 
-    return {"data": updated_person}
+    if persontoupdate == None:
+          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"person <{personid}> was not found!")    
+
+    person_query.update(updated_person.dict(), synchronize_session=False)
+    db.commit()
+
+    return {"data": person_query.first()}
 
 
