@@ -18,8 +18,17 @@ class Person(BaseModel):
 
 
 
+
+
 class Wallet(BaseModel):
     walletid: int
+    walletaddress: str
+    walletownerid: int
+
+    class Config:
+        orm_mode = True
+
+class CreateWallet(BaseModel):
     walletaddress: str
     walletownerid: int
 

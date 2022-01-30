@@ -1,3 +1,4 @@
+from genericpath import exists
 from xmlrpc.client import boolean
 from fastapi import FastAPI, Depends, Response, status, HTTPException
 from fastapi.params import Body
@@ -94,6 +95,26 @@ def post_person(person: schemas.Person, db: Session = Depends(get_db)):
     return {"data": new_person}
 
 
+# insert a wallet
+@app.post("/wallets", status_code=status.HTTP_201_CREATED)
+def post_wallet(wallet: schemas.CreateWallet, db: Session = Depends(get_db)):
+
+    mywallet = models.Wallet(**wallet.dict())
+    
+    wallet_query = db.query(models.Wallet).filter(models.Wallet.walletaddress == mywallet.walletaddress).filter(models.Wallet.walletownerid == mywallet.walletownerid)
+
+    if wallet_query.first() == None:
+        db.add(mywallet)
+        db.commit()
+        db.refresh(mywallet)
+
+        return {"data": mywallet}
+    else:
+        existing_wallet = wallet_query.first()
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                            detail=f"Wallet <{mywallet.walletaddress}> is already registered for owner <{mywallet.walletownerid}>. Wallet not inserted.")
+
+
 # Delete a person
 @app.delete("/persons/{personid}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_person(personid: int, db: Session = Depends(get_db)):
@@ -126,5 +147,12 @@ def update_person(personid: int, updated_person: schemas.Person, db: Session = D
     db.commit()
 
     return {"data": person_query.first()}
+
+
+
+
+
+
+    
 
 
