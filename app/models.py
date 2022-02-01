@@ -1,5 +1,5 @@
 from turtle import back
-from sqlalchemy import TIMESTAMP, BigInteger, Column, Integer, String, Boolean, DateTime
+from sqlalchemy import TIMESTAMP, BigInteger, Column, Integer, String, Boolean, DateTime, null
 from sqlalchemy import ForeignKey
 from sqlalchemy.sql.expression import text
 from sqlalchemy.orm import relationship
@@ -22,9 +22,10 @@ class Person(Base):
 class Wallet(Base):
     __tablename__ = "wallet"
 
-    walletid = Column(Integer, autoincrement=True, primary_key=True, nullable=False)
+    alias = Column(String, nullable=True)
     walletaddress = Column(String, nullable=False)
     walletownerid = Column(BigInteger, ForeignKey("person.personid", ondelete="CASCADE"), nullable=False)
+    walletid = Column(Integer, autoincrement=True, primary_key=True, nullable=False)
 
     # owner = relationship("person", back_populates="wallets")
 
