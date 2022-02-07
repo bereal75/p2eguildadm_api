@@ -2,6 +2,10 @@ from sqlalchemy import create_engine, MetaData, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from .config import settings
+import time
+
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
 SQLALCHEMY_DATABASE_URL = "postgresql://{0}:{1}@{2}/{3}".format(settings.p2eguildadm_user,settings.p2eguildadm_pass,settings.p2eguildadm_host,settings.p2eguildadm_dbname )
@@ -22,6 +26,19 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+# while True:
+
+#     try:
+#         conn = psycopg2.connect(host='localhost', database= 'p2eguildadm', user="guildmaster", password='<enterPassword>', cursor_factory=RealDictCursor)
+#         cursor = conn.cursor()
+#         break
+    
+#     except Exception as error:
+#         print("Connecting to database failed")
+#         print("Error: ", error)
+#         time.sleep(2)
 
 
 

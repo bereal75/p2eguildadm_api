@@ -65,3 +65,14 @@ def get_walletbyperson(personid: int, db: Session = Depends(get_db)):
         wallets = wallet_query.all()
         #TODO convert to pydantic schema without walletid
         return wallets
+
+@router.post("/walletbalance", status_code=status.HTTP_201_CREATED, response_model=schemas.WalletBalanceCreate)
+def post_walletbalance(walletbalance: schemas.WalletBalanceBase, db: Session = Depends(get_db)):
+
+    mywalletbalance = models.WalletBalance(**walletbalance.dict())
+    
+    db.add(mywalletbalance)
+    db.commit()
+    db.refresh(mywalletbalance)
+
+    return walletbalance
