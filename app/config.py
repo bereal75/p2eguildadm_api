@@ -2,11 +2,11 @@ import os
 from pydantic import BaseSettings
 
 class Settings(BaseSettings):
-    dcgdb_host : str
-    dcgdb_dbname : str
-    dcgdb_port : str
-    dcgdb_user : str
-    dcgdb_pass : str
+    p2eguildadm_host : str
+    p2eguildadm_dbname : str
+    p2eguildadm_port : str
+    p2eguildadm_user : str
+    p2eguildadm_pass : str
 
     class Config:
         env_file = ".env"
