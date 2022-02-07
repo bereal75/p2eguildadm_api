@@ -14,7 +14,7 @@ import time
 from .config import settings
 from . import models, schemas
 from .database import engine, get_db
-from .routers import person, gamelogsr, wallet, deck, cryptotokens
+from .routers import person, gamelogsr, wallet, deck, tokensupply
 
 
 
@@ -31,7 +31,7 @@ app.include_router(person.router)
 app.include_router(gamelogsr.router)
 app.include_router(wallet.router)
 app.include_router(deck.router)
-app.include_router(cryptotokens.router)
+app.include_router(tokensupply.router)
 
 @app.get("/")
 def root():
