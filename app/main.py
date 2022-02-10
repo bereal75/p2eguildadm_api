@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, Response, status, HTTPException, APIRouter
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.params import Body
 from typing import List
 
@@ -26,6 +27,23 @@ models.Base.metadata.create_all(bind=engine)
 # instantiate a fastapi class (our api)
 app = FastAPI()
 
+origins = {"http://kgg.cryptostakes.ch",
+            "https://kgg.cryptostakes.ch:7999",
+            "https://kgg.cryptostakes.ch"
+            "http://localhost",
+            "http://localhost:7999",
+            "http://146.4.99.162",
+            "http://146.4.99.162:7999"
+            "http://192.168.10.47"}
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 app.include_router(person.router)
 app.include_router(gamelogsr.router)
@@ -46,5 +64,4 @@ def root():
 
 
     
-
 
