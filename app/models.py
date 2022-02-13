@@ -92,6 +92,19 @@ class GameLogSR(Base):
     changehash = Column(String, nullable=False)
 
 
+class Recruitment(Base):
+    __tablename__ = "recruitment"
+
+    recruitmentid = Column(Integer, primary_key=True, nullable=False)
+    walletid = Column(Integer, nullable=False)
+    walletaddress = Column(String, nullable=False)
+    recruitingsamurais = Column(String, nullable=True)
+    blockno = Column(BigInteger, nullable=False)
+    missioncomplete = Column(Boolean, nullable=False)
+    missionduration = Column(Integer, nullable=False)
+
+
+
 
 
 # class GameLogSR(Base):

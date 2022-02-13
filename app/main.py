@@ -15,7 +15,7 @@ import time
 from .config import settings
 from . import models, schemas
 from .database import engine, get_db
-from .routers import person, gamelogsr, wallet, deck, tokensupply
+from .routers import person, gamelogsr, recruitment, wallet, deck, tokensupply
 
 
 
@@ -27,14 +27,8 @@ models.Base.metadata.create_all(bind=engine)
 # instantiate a fastapi class (our api)
 app = FastAPI()
 
-origins = {"http://kgg.cryptostakes.ch",
-            "https://kgg.cryptostakes.ch:7999",
-            "https://kgg.cryptostakes.ch"
-            "http://localhost",
-            "http://localhost:7999",
-            "http://146.4.99.162",
-            "http://146.4.99.162:7999"
-            "http://192.168.10.47"}
+
+origins = {"http://localhost:7999"}
 
 app.add_middleware(
     CORSMiddleware,
@@ -50,6 +44,7 @@ app.include_router(gamelogsr.router)
 app.include_router(wallet.router)
 app.include_router(deck.router)
 app.include_router(tokensupply.router)
+app.include_router(recruitment.router)
 
 @app.get("/")
 def root():

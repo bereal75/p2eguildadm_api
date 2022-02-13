@@ -175,3 +175,23 @@ class GameLogSRShort(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class RecruitmentBase(BaseModel):
+    recruitmentid : int
+    walletid : int
+    walletaddress : str
+    recruitingsamurais : Optional[str]
+    blockno : int
+    missioncomplete : bool
+    missionduration : int
+
+    class Config:
+        orm_mode = True
+
+
+class RecruitmentId(BaseModel):
+    recruitmentid : int
+
+    class Config:
+        orm_mode = True
