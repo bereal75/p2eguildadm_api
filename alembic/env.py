@@ -11,7 +11,7 @@ from app.config import settings
 # access to the values within the .ini file in use.
 # tss: overriding the sqlalchemy.url in the alembic.ini file to pick up our own settings.
 config = context.config
-config.set_main_option("sqlachemy.url", "postgresql://{0}:{1}@{2}/{3}".format(settings.p2eguildadm_user,settings.p2eguildadm_pass,settings.p2eguildadm_host,settings.p2eguildadm_dbname ))
+config.set_main_option("sqlalchemy.url", "postgresql://{0}:{1}@{2}/{3}".format(settings.p2eguildadm_user,settings.p2eguildadm_pass,settings.p2eguildadm_host,settings.p2eguildadm_dbname ))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -21,6 +21,7 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+# target_metadata = None
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
